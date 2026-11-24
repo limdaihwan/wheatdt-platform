@@ -1,0 +1,15 @@
+{
+ "spike": {
+  "Range check": 8.0,
+  "Hampel filter": 15.0,
+  "Proposed": 4.0,
+  "SaQC (range + offset)": 4.0
+ },
+ "drift": {
+  "Single-series trend": 0.8,
+  "Peer trend, no gating": 0.2,
+  "Proposed": 0.15,
+  "SaQC drift-from-norm": 0.5,
+  "SaQC drift-from-norm, all plots": 3.0
+ }
+}

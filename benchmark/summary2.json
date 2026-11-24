@@ -1,0 +1,345 @@
+{
+ "ablation": {
+  "none": {
+   "f1": [
+    0.003,
+    0.015
+   ],
+   "er": [
+    0.017,
+    0.075
+   ],
+   "fa": [
+    9.0,
+    7.152
+   ]
+  },
+  "soil_only": {
+   "f1": [
+    0.151,
+    0.074
+   ],
+   "er": [
+    0.733,
+    0.278
+   ],
+   "fa": [
+    22.05,
+    7.067
+   ]
+  },
+  "trt_only": {
+   "f1": [
+    0.0,
+    0.0
+   ],
+   "er": [
+    0.0,
+    0.0
+   ],
+   "fa": [
+    0.0,
+    0.0
+   ]
+  },
+  "soilxtrt_raw": {
+   "f1": [
+    0.862,
+    0.097
+   ],
+   "er": [
+    0.983,
+    0.075
+   ],
+   "fa": [
+    1.2,
+    0.894
+   ]
+  },
+  "trt_norm": {
+   "f1": [
+    0.899,
+    0.044
+   ],
+   "er": [
+    0.983,
+    0.075
+   ],
+   "fa": [
+    0.85,
+    0.813
+   ]
+  },
+  "block_norm": {
+   "f1": [
+    0.176,
+    0.095
+   ],
+   "er": [
+    0.683,
+    0.275
+   ],
+   "fa": [
+    21.5,
+    6.312
+   ]
+  },
+  "random_norm": {
+   "f1": [
+    0.19,
+    0.146
+   ],
+   "er": [
+    0.617,
+    0.311
+   ],
+   "fa": [
+    18.3,
+    5.886
+   ]
+  },
+  "trtcv_norm": {
+   "f1": [
+    0.855,
+    0.112
+   ],
+   "er": [
+    0.983,
+    0.075
+   ],
+   "fa": [
+    1.1,
+    1.119
+   ]
+  },
+  "soilxtrt_norm": {
+   "f1": [
+    0.872,
+    0.094
+   ],
+   "er": [
+    0.983,
+    0.075
+   ],
+   "fa": [
+    0.95,
+    0.887
+   ]
+  },
+  "two_soilxtrt_raw": [
+   0.401,
+   0.139
+  ],
+  "two_trt_norm": [
+   0.869,
+   0.09
+  ],
+  "two_peer": [
+   0.499,
+   0.276
+  ]
+ },
+ "peer": {
+  "soil x treatment (4)": [
+   0.65,
+   0.243
+  ],
+  "treatment x cultivar (4)": [
+   0.516,
+   0.173
+  ],
+  "treatment (8)": [
+   0.391,
+   0.171
+  ],
+  "block, mixed treatments (6)": [
+   0.129,
+   0.073
+  ],
+  "random (4)": [
+   0.115,
+   0.053
+  ],
+  "all plots (24)": [
+   0.075,
+   0.036
+  ],
+  "treatment, size 2": [
+   0.497,
+   0.134
+  ],
+  "treatment, size 3": [
+   0.492,
+   0.177
+  ],
+  "treatment, size 4": [
+   0.464,
+   0.204
+  ],
+  "treatment, size 8": [
+   0.391,
+   0.171
+  ]
+ },
+ "rob_drift": {
+  "baseline": {
+   "Proposed peer trend + gate": 0.696,
+   "SaQC DFN, all plots": 0.01,
+   "SaQC DFN, trial groups": 0.849,
+   "Single-series trend": 0.025
+  },
+  "noise x2": {
+   "Proposed peer trend + gate": 0.636,
+   "SaQC DFN, all plots": 0.017,
+   "SaQC DFN, trial groups": 0.85,
+   "Single-series trend": 0.02
+  },
+  "small drift (0.08-0.20)": {
+   "Proposed peer trend + gate": 0.4,
+   "SaQC DFN, all plots": 0.001,
+   "SaQC DFN, trial groups": 0.779,
+   "Single-series trend": 0.015
+  },
+  "spikes x3.3 (p = 0.01)": {
+   "Proposed peer trend + gate": 0.688,
+   "SaQC DFN, all plots": 0.01,
+   "SaQC DFN, trial groups": 0.839,
+   "Single-series trend": 0.024
+  },
+  "two drifts in one group": {
+   "Proposed peer trend + gate": 0.499,
+   "SaQC DFN, all plots": 0.011,
+   "SaQC DFN, trial groups": 0.401,
+   "Single-series trend": 0.029
+  }
+ },
+ "rob_spike": {
+  "baseline": {
+   "Hampel filter": 0.92,
+   "Proposed": 0.978,
+   "SaQC (range + offset)": 0.975
+  },
+  "noise x2": {
+   "Hampel filter": 0.86,
+   "Proposed": 0.975,
+   "SaQC (range + offset)": 0.972
+  },
+  "spikes x3.3 (p = 0.01)": {
+   "Hampel filter": 0.942,
+   "Proposed": 0.99,
+   "SaQC (range + offset)": 0.972
+  }
+ },
+ "rob_fa": {
+  "baseline": {
+   "Proposed peer trend + gate": 2.1,
+   "SaQC DFN, all plots": 8.6,
+   "SaQC DFN, trial groups": 1.1,
+   "Single-series trend": 82.0
+  },
+  "noise x2": {
+   "Proposed peer trend + gate": 2.2,
+   "SaQC DFN, all plots": 9.1,
+   "SaQC DFN, trial groups": 0.9,
+   "Single-series trend": 82.7
+  },
+  "small drift (0.08-0.20)": {
+   "Proposed peer trend + gate": 2.1,
+   "SaQC DFN, all plots": 5.7,
+   "SaQC DFN, trial groups": 0.8,
+   "Single-series trend": 81.8
+  },
+  "spikes x3.3 (p = 0.01)": {
+   "Proposed peer trend + gate": 2.1,
+   "SaQC DFN, all plots": 8.2,
+   "SaQC DFN, trial groups": 1.2,
+   "Single-series trend": 82.1
+  },
+  "two drifts in one group": {
+   "Proposed peer trend + gate": 3.5,
+   "SaQC DFN, all plots": 9.0,
+   "SaQC DFN, trial groups": 0.6,
+   "Single-series trend": 82.0
+  }
+ },
+ "plaus": {
+  "t_mean": [
+   9.27,
+   0.18,
+   9.01,
+   9.62
+  ],
+  "t_max": [
+   14.57,
+   0.17,
+   14.24,
+   14.82
+  ],
+  "t_min": [
+   3.97,
+   0.24,
+   3.67,
+   4.63
+  ],
+  "rain": [
+   260.97,
+   62.57,
+   162.9,
+   384.5
+  ],
+  "y_full": [
+   6.95,
+   0.42,
+   6.13,
+   7.62
+  ],
+  "y_def": [
+   5.02,
+   0.64,
+   4.1,
+   6.77
+  ],
+  "y_rf": [
+   3.87,
+   0.65,
+   2.88,
+   5.47
+  ],
+  "drop": [
+   0.45,
+   0.08,
+   0.23,
+   0.57
+  ],
+  "anthesis_doy": [
+   129.96,
+   3.89,
+   122.5,
+   135.0
+  ],
+  "harvest_doy": [
+   171.24,
+   4.02,
+   163.0,
+   177.0
+  ],
+  "irr_full": [
+   175.0,
+   0.0,
+   175.0,
+   175.0
+  ],
+  "ctd_diff": [
+   2.29,
+   0.38,
+   1.45,
+   3.08
+  ],
+  "hi_full": [
+   0.45,
+   0.01,
+   0.43,
+   0.46
+  ]
+ }
+}

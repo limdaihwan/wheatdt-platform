@@ -1,0 +1,180 @@
+{
+ "trained_on": "24 synthetic seasons (seeds 201\u2013224)",
+ "tested_on": "10 held-out synthetic seasons (seeds 301\u2013310)",
+ "stress_outlook": {
+  "horizon_days": 7,
+  "models": {
+   "Persistence (no change)": {
+    "mae": 0.0714,
+    "rmse": 0.108,
+    "new_stress_warning": {
+     "precision": 0.0,
+     "recall": 0.0,
+     "f1": 0.0,
+     "events": 2009
+    }
+   },
+   "Water-balance projection": {
+    "mae": 0.0697,
+    "rmse": 0.1074,
+    "new_stress_warning": {
+     "precision": 0.695,
+     "recall": 0.87,
+     "f1": 0.772,
+     "events": 2009
+    }
+   },
+   "Hybrid model (water balance + gradient boosting)": {
+    "mae": 0.0464,
+    "rmse": 0.0702,
+    "new_stress_warning": {
+     "precision": 0.721,
+     "recall": 0.797,
+     "f1": 0.757,
+     "events": 2009
+    }
+   },
+   "Early warning rule used by the platform": {
+    "rule": "hybrid",
+    "rule_f1_train": {
+     "projection": 0.733,
+     "hybrid": 0.742,
+     "either": 0.723
+    },
+    "mae": null,
+    "rmse": null,
+    "new_stress_warning": {
+     "precision": 0.721,
+     "recall": 0.797,
+     "f1": 0.757,
+     "events": 2009
+    }
+   }
+  },
+  "interval": {
+   "q10": -0.08089198759702584,
+   "q90": 0.07794342436935009,
+   "n_train": 103170,
+   "n_test": 42334,
+   "warn_threshold": 0.505,
+   "warn_rule": "hybrid"
+  }
+ },
+ "yield_forecast": {
+  "points": {
+   "Z30": "stem elongation (Z30)",
+   "Z65": "anthesis (Z65)",
+   "Z65+21": "mid grain filling (Z65 + 21 d)"
+  },
+  "models": {
+   "Z30": {
+    "Treatment \u00d7 cultivar mean": {
+     "rmse": 0.607,
+     "mae": 0.484,
+     "r2": 0.813,
+     "bias": 0.143
+    },
+    "Linear (ridge)": {
+     "rmse": 0.673,
+     "mae": 0.54,
+     "r2": 0.77,
+     "bias": 0.345
+    },
+    "Gradient boosting": {
+     "rmse": 0.636,
+     "mae": 0.522,
+     "r2": 0.795,
+     "bias": 0.197
+    },
+    "Selected model": {
+     "rmse": 0.673,
+     "mae": 0.54,
+     "r2": 0.77,
+     "bias": 0.345,
+     "name": "Linear (ridge)",
+     "cv_rmse_train": 0.737
+    }
+   },
+   "Z65": {
+    "Treatment \u00d7 cultivar mean": {
+     "rmse": 0.607,
+     "mae": 0.484,
+     "r2": 0.813,
+     "bias": 0.143
+    },
+    "Linear (ridge)": {
+     "rmse": 0.461,
+     "mae": 0.379,
+     "r2": 0.892,
+     "bias": 0.027
+    },
+    "Gradient boosting": {
+     "rmse": 0.528,
+     "mae": 0.426,
+     "r2": 0.859,
+     "bias": -0.032
+    },
+    "Selected model": {
+     "rmse": 0.461,
+     "mae": 0.379,
+     "r2": 0.892,
+     "bias": 0.027,
+     "name": "Linear (ridge)",
+     "cv_rmse_train": 0.515
+    }
+   },
+   "Z65+21": {
+    "Treatment \u00d7 cultivar mean": {
+     "rmse": 0.607,
+     "mae": 0.484,
+     "r2": 0.813,
+     "bias": 0.143
+    },
+    "Linear (ridge)": {
+     "rmse": 0.455,
+     "mae": 0.379,
+     "r2": 0.895,
+     "bias": 0.108
+    },
+    "Gradient boosting": {
+     "rmse": 0.475,
+     "mae": 0.387,
+     "r2": 0.886,
+     "bias": 0.073
+    },
+    "Selected model": {
+     "rmse": 0.455,
+     "mae": 0.379,
+     "r2": 0.895,
+     "bias": 0.108,
+     "name": "Linear (ridge)",
+     "cv_rmse_train": 0.412
+    }
+   }
+  },
+  "interval": {
+   "Z30": {
+    "q10": -0.8592443526917426,
+    "q90": 1.0645001784564934,
+    "n_train": 576,
+    "n_test": 240,
+    "model": "Linear (ridge)"
+   },
+   "Z65": {
+    "q10": -0.6429841520624007,
+    "q90": 0.720475705386928,
+    "n_train": 576,
+    "n_test": 240,
+    "model": "Linear (ridge)"
+   },
+   "Z65+21": {
+    "q10": -0.5047644046174486,
+    "q90": 0.5493849209934907,
+    "n_train": 576,
+    "n_test": 240,
+    "model": "Linear (ridge)"
+   }
+  }
+ },
+ "caveat": "Synthetic data come from the platform's own crop\u2013soil generator, so accuracy here verifies the pipeline and is an upper bound; it is not agronomic validation."
+}

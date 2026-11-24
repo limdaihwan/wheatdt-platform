@@ -1,0 +1,5 @@
+plot_id,start,end,variable,type
+P07,2025-03-01,2025-03-14,vwc_10cm,sensor_drift(+0~4%)
+P15,2025-04-22,2025-04-24,all,logger_offline
+ALL,,,vwc_10cm,random_spike x1.8 (312 rows)
+various,,,ndvi,"reflectance_error x0.5 at rows 89,576,615,621"

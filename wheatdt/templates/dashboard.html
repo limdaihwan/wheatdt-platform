@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wheat Trial Digital Twin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..750&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAEEE7; --surface:#F6F8F3; --ink:#1B2620; --muted:#5A675F; --line:#C9D2C7;
+  --soil:#3A3528; --soil-ink:#EDE6D2; --soil-muted:#B7AE94;
+  --wheat:#B08519; --full:#2F6A9E; --deficit:#BE8420; --rainfed:#A3432B;
+  --ok:#3D7A45; --warn:#B7791F; --bad:#A3432B; --info:#4F6B86;
+  --shade-drift:rgba(190,132,32,.16); --shade-off:rgba(90,103,95,.16);
+  --font:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131915; --surface:#1B231E; --ink:#E3E9E1; --muted:#98A69A; --line:#2E3A33;
+    --soil:#2A271E; --soil-ink:#EDE6D2; --soil-muted:#A89F86;
+    --wheat:#D8B447; --full:#72A8D8; --deficit:#E2AC4A; --rainfed:#DA7760;
+    --ok:#6DB077; --warn:#E2AC4A; --bad:#DA7760; --info:#8FB0CF;
+    --shade-drift:rgba(226,172,74,.18); --shade-off:rgba(152,166,154,.14);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131915; --surface:#1B231E; --ink:#E3E9E1; --muted:#98A69A; --line:#2E3A33;
+  --soil:#2A271E; --soil-ink:#EDE6D2; --soil-muted:#A89F86;
+  --wheat:#D8B447; --full:#72A8D8; --deficit:#E2AC4A; --rainfed:#DA7760;
+  --ok:#6DB077; --warn:#E2AC4A; --bad:#DA7760; --info:#8FB0CF;
+  --shade-drift:rgba(226,172,74,.18); --shade-off:rgba(152,166,154,.14);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--wheat);outline-offset:2px}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+h2{font-size:1.02rem}
+.wrap{max-width:1440px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 28px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.brand h1{font-size:clamp(1.5rem,2.6vw,2.1rem);font-stretch:112%;font-weight:720;line-height:1.05}
+.brand p{margin:.3rem 0 0;color:var(--muted)}
+.synthetic{margin-left:auto;display:flex;align-items:center;gap:10px;max-width:420px;font-size:.84rem;color:var(--muted)}
+.synthetic b{flex:none;background:var(--wheat);color:#1B1A12;font-weight:650;font-stretch:88%;padding:3px 8px;border-radius:3px}
+.theme-btn{border:1px solid var(--line);background:transparent;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.84rem;color:var(--muted)}
+
+/* grid */
+main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:26px 28px}
+.span-8{grid-column:span 8}.span-4{grid-column:span 4}.span-12{grid-column:span 12}.span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-5{grid-column:span 5}
+@media (max-width:1060px){.span-8,.span-4,.span-6,.span-7,.span-5{grid-column:span 12}}
+.sec-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sub{color:var(--muted);font-size:.86rem}
+
+/* segmented control */
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;cursor:pointer;font-size:.82rem;font-stretch:92%;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.field .seg button{border-color:rgba(237,230,210,.28);color:var(--soil-muted)}
+.field .seg button[aria-pressed="true"]{background:var(--soil-ink);border-color:var(--soil-ink);color:var(--soil)}
+
+/* field map: the centerpiece */
+.field{background:var(--soil);color:var(--soil-ink);border-radius:10px;padding:18px 18px 16px}
+.field h2{font-size:1.08rem;font-stretch:108%}
+.field .sub{color:var(--soil-muted)}
+.plotgrid{display:grid;grid-template-columns:54px repeat(6,minmax(0,1fr));gap:6px;margin-top:6px}
+.blk{align-self:center;font-size:.76rem;color:var(--soil-muted);font-stretch:85%;line-height:1.15}
+.cell{position:relative;min-height:88px;border:0;border-radius:3px;padding:7px 8px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;transition:box-shadow .12s}
+.cell .id{font-weight:680;font-size:.9rem}
+.cell .tr{font-size:.72rem;font-stretch:85%;opacity:.85}
+.cell .val{font-size:1.25rem;font-weight:640;font-stretch:95%;line-height:1}
+.kv dd small{font-weight:500;color:var(--muted);font-size:.78rem}
+.cell .val small{font-size:.66rem;font-weight:500;margin-left:2px;opacity:.8}
+.cell .qc{position:absolute;top:6px;right:6px;display:flex;gap:3px}
+.cell .qc i{width:8px;height:8px;border-radius:50%;background:#F2E6C2;box-shadow:0 0 0 1.5px rgba(0,0,0,.45)}
+.cell .qc i.off{background:#9AA39C}
+.cell .qc i.drift{background:#F0B94A}
+.cell .qc i.ndvi{background:#E07A5F}
+.cell .strip{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:3px 0 0 3px}
+.cell[aria-pressed="true"]{box-shadow:0 0 0 3px var(--soil-ink),0 0 0 5px var(--soil)}
+.cell.na{background:repeating-linear-gradient(135deg,rgba(237,230,210,.07) 0 6px,rgba(237,230,210,.02) 6px 12px)!important;color:var(--soil-muted)!important}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:14px;font-size:.8rem;color:var(--soil-muted)}
+.ramp{display:flex;align-items:center;gap:8px}
+.ramp span.bar{width:160px;height:9px;border-radius:2px}
+.trt-key{display:flex;gap:12px}
+.trt-key span::before{content:"";display:inline-block;width:4px;height:12px;border-radius:1px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.qc-key{display:flex;gap:12px}
+.qc-key i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;box-shadow:0 0 0 1.5px rgba(0,0,0,.45)}
+
+/* state panel */
+.state .date{font-size:clamp(1.7rem,3vw,2.4rem);font-weight:720;font-stretch:115%;line-height:1}
+.state .date-sub{color:var(--muted);margin-top:6px}
+.stage{margin:14px 0 4px;font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;margin:14px 0 18px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.facts dt{font-size:.76rem;color:var(--muted);font-stretch:90%}
+.facts dd{margin:2px 0 0;font-size:1.12rem;font-weight:620}
+.facts dd small{font-size:.72rem;color:var(--muted);font-weight:500}
+.alerts{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.alerts li{border-left:3px solid var(--c);padding:3px 0 3px 10px}
+.alerts li strong{display:block;font-size:.9rem}
+.alerts li span{font-size:.84rem;color:var(--muted)}
+.alerts .plots{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.alerts .plots button{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:1px 6px;font-size:.76rem;cursor:pointer}
+.alerts .none{color:var(--muted);font-size:.9rem;border:0;padding:0}
+
+/* timeline */
+.timeline{padding-top:4px}
+.tl-row{display:flex;align-items:center;gap:14px}
+.play{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;display:grid;place-items:center}
+.play svg{width:14px;height:14px}
+.tl-track{position:relative;flex:1;min-width:0}
+.tl-track canvas{display:block;width:100%;height:74px}
+.tl-track input[type=range]{position:absolute;left:0;right:0;bottom:-4px;width:100%;margin:0;background:transparent;-webkit-appearance:none;appearance:none;height:82px;cursor:pointer}
+.tl-track input[type=range]::-webkit-slider-runnable-track{height:82px;background:transparent}
+.tl-track input[type=range]::-moz-range-track{height:82px;background:transparent}
+.tl-track input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:3px;height:82px;background:var(--wheat);border-radius:2px}
+.tl-track input[type=range]::-moz-range-thumb{width:3px;height:82px;background:var(--wheat);border:0;border-radius:2px}
+.tl-key{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 0 54px;font-size:.78rem;color:var(--muted)}
+.tl-key span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+
+/* plot detail */
+.plot-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:14px;padding-top:18px;border-top:1px solid var(--line)}
+.plot-head h2{font-size:1.9rem;font-stretch:115%;font-weight:720}
+.plot-head p{margin:0;color:var(--muted)}
+.plot-head .trt-pill{display:inline-block;padding:2px 9px;border-radius:999px;color:#fff;font-size:.8rem;font-weight:600;background:var(--c)}
+.chart-box{position:relative;height:280px}
+.chart-box.tall{height:300px}
+.panel h3{font-size:.95rem;margin-bottom:2px}
+.panel .note{font-size:.8rem;color:var(--muted);margin:0 0 8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px 16px;margin-top:16px}
+.kv div{border-top:1px solid var(--line);padding-top:6px}
+.kv dt{font-size:.74rem;color:var(--muted)}
+.kv dd{margin:1px 0 0;font-weight:620}
+
+/* quality table */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.78rem}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:color-mix(in srgb,var(--wheat) 8%,transparent)}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.74rem;font-weight:600;color:#1B1A12;background:var(--c)}
+.qcgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px 32px}
+@media (max-width:900px){.qcgrid{grid-template-columns:minmax(0,1fr)}}
+.grp{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.grp b{font-size:.86rem;font-stretch:92%}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:2px 7px;font-size:.78rem;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.chip i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.chip[aria-pressed="true"]{border-color:var(--ink)}
+.flow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:.88rem}
+.flow li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px}
+.flow li span{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:.72rem;font-weight:650}
+.val{width:100%;font-size:.86rem}
+.val td.ok{color:var(--ok);font-weight:600}.val td.bad{color:var(--bad);font-weight:600}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;max-width:80ch}
+.loading{padding:40px 0;color:var(--muted)}
+@media (max-width:640px){
+  .plotgrid{grid-template-columns:30px repeat(6,minmax(0,1fr));gap:4px}
+  .blk{font-size:.66rem}
+  .cell{min-height:74px;padding:5px 5px 5px 7px}
+  .cell .tr{display:none}
+  .cell .val{font-size:.95rem}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tl-key{margin-left:0}
+  .synthetic{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){.cell{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <h1>Wheat digital twin</h1>
+    <p>Irrigation × cultivar trial near Valladolid, Spain. Season 2024–25, 24 plots. <span id="verTag"></span></p>
+  </div>
+  <div class="synthetic" id="synthTag"><b>Synthetic</b><span>Generated test data for building the platform. These are not field measurements.</span></div>
+  <button class="theme-btn" id="themeBtn" type="button">Switch theme</button>
+</header>
+
+<main id="app">
+  <section class="field span-8" aria-labelledby="fieldTitle">
+    <div class="sec-head">
+      <div>
+        <h2 id="fieldTitle">Field on <span id="mapDate"></span></h2>
+        <div class="sub" id="varDesc"></div>
+      </div>
+      <div class="seg" id="varSeg" role="group" aria-label="Map variable"></div>
+    </div>
+    <div class="plotgrid" id="plotgrid"></div>
+    <div class="legend">
+      <div class="ramp" id="ramp"></div>
+      <div class="trt-key"><span style="--c:var(--full)">Full irrigation</span><span style="--c:var(--deficit)">Deficit</span><span style="--c:var(--rainfed)">Rainfed</span></div>
+      <div class="qc-key"><span><i style="background:#9AA39C"></i>Sensor offline</span><span><i style="background:#F0B94A"></i>Sensor drift</span><span><i style="background:#E07A5F"></i>NDVI rejected</span></div>
+    </div>
+  </section>
+
+  <aside class="state span-4" aria-live="polite">
+    <div class="date" id="stDate"></div>
+    <div class="date-sub" id="stSub"></div>
+    <div class="stage" id="stStage"></div>
+    <dl class="facts" id="stFacts"></dl>
+    <h2>Alerts</h2>
+    <ul class="alerts" id="alerts"></ul>
+  </aside>
+
+  <section class="timeline span-12" aria-label="Season timeline">
+    <div class="tl-row">
+      <button class="play" id="playBtn" type="button" aria-label="Play season"></button>
+      <div class="tl-track">
+        <canvas id="tlCanvas"></canvas>
+        <input type="range" id="slider" min="0" max="0" step="1" aria-label="Date">
+      </div>
+    </div>
+    <div class="tl-key">
+      <span style="--c:#8FB0CF">Daily rain</span>
+      <span style="--c:var(--full)">Irrigation, full</span>
+      <span style="--c:var(--deficit)">Irrigation, deficit</span>
+      <span style="--c:var(--wheat)">Fertilizer</span>
+      <span style="--c:#7FA36A">Growth stage (field median)</span>
+    </div>
+  </section>
+
+  <section class="span-12" aria-labelledby="plotTitle">
+    <div class="plot-head">
+      <h2 id="plotTitle"></h2>
+      <span class="trt-pill" id="plotPill"></span>
+      <p id="plotMeta"></p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:26px 28px">
+      <div class="panel span-7">
+        <h3>Soil water</h3>
+        <p class="note">Hourly readings averaged per day after spike removal. Dashed lines show field capacity and wilting point for this soil. Shaded days: amber, possible drift; grey, sensor offline.</p>
+        <div class="chart-box tall"><canvas id="soilChart"></canvas></div>
+      </div>
+      <div class="panel span-5">
+        <div class="sec-head" style="margin-bottom:4px">
+          <h3>Canopy</h3>
+          <div class="seg" id="canSeg" role="group" aria-label="Canopy variable"></div>
+        </div>
+        <p class="note">Weekly observations for this plot against the median of each treatment. Crossed points were rejected by quality control.</p>
+        <div class="chart-box tall"><canvas id="canChart"></canvas></div>
+      </div>
+    </div>
+    <dl class="kv" id="plotKv"></dl>
+  </section>
+
+  <section class="panel span-12" aria-labelledby="fcTitle" id="fcSection">
+    <div class="sec-head">
+      <div><h2 id="fcTitle">Forecasts</h2>
+      <div class="sub">A 7-day root-zone water outlook drives the early stress alert. Yield is forecast at stem elongation, anthesis and mid grain filling.</div></div>
+      <div class="seg" id="fcSeg" role="group" aria-label="Forecast point"></div>
+    </div>
+    <div class="qcgrid">
+      <div class="panel">
+        <h3>Yield forecast against harvest, this season</h3>
+        <p class="note">Each point is one plot. Bars show the 80% interval. Points on the dashed line were forecast exactly.</p>
+        <div class="chart-box tall"><canvas id="fcChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Accuracy on held-out seasons</h3>
+        <p class="note" id="fcTrained"></p>
+        <div class="tbl-wrap"><table><thead><tr><th>7-day water outlook</th><th>Mean error</th><th>Early warning F1</th></tr></thead><tbody id="fcStress"></tbody></table></div>
+        <div class="tbl-wrap" style="margin-top:14px"><table><thead><tr><th>Yield forecast</th><th>Treatment mean</th><th>Model the platform uses</th></tr></thead><tbody id="fcYield"></tbody></table></div>
+        <p class="note" id="fcCaveat" style="margin-top:10px"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel span-7" aria-labelledby="wxTitle">
+    <div class="sec-head">
+      <h2 id="wxTitle">Weather</h2>
+      <div class="seg" id="wxSeg" role="group" aria-label="Weather view"></div>
+    </div>
+    <div class="chart-box"><canvas id="wxChart"></canvas></div>
+  </section>
+
+  <section class="panel span-5" aria-labelledby="yTitle">
+    <div class="sec-head"><h2 id="yTitle">Grain yield by treatment</h2></div>
+    <div class="chart-box"><canvas id="yChart"></canvas></div>
+  </section>
+
+  <section class="panel span-12" aria-labelledby="tqTitle">
+    <div class="sec-head">
+      <div><h2 id="tqTitle">Trial-aware quality control</h2>
+      <div class="sub">The twin passes the trial design to QC, so each probe is compared with plots that should behave alike.</div></div>
+      <span class="sub" id="tqEngine"></span>
+    </div>
+    <div class="qcgrid">
+      <div>
+        <h3 style="font-size:.95rem;margin-bottom:4px">Peer groups from the design metadata</h3>
+        <p class="note" style="font-size:.8rem;color:var(--muted);margin:0 0 6px">Soil moisture is converted to available water with each plot's field capacity and wilting point, so plots on different soils can share one treatment group.</p>
+        <div id="tqGroups"></div>
+        <div class="legend" style="color:var(--muted);margin-top:8px"><span class="trt-key"><span style="--c:#8C6A43">Clay loam (FC 36, WP 18%)</span><span style="--c:#C9A66B">Loam (FC 30, WP 12%)</span></span></div>
+      </div>
+      <div>
+        <h3 style="font-size:.95rem;margin-bottom:8px">How a reading is checked</h3>
+        <ol class="flow" id="tqFlow"></ol>
+        <h3 style="font-size:.95rem;margin:16px 0 4px">Check against synthetic ground truth</h3>
+        <table class="val"><tbody id="tqVal"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel span-12" aria-labelledby="qTitle">
+    <div class="sec-head">
+      <h2 id="qTitle">Data quality</h2>
+      <span class="sub" id="qSum"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Issue</th><th>Plot</th><th>When</th><th>What the platform did</th></tr></thead>
+        <tbody id="qBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer>
+  Root-zone water is the depth-weighted share of plant-available water (10, 30 and 60 cm sensors weighted 0.40, 0.35, 0.25) between wilting point and field capacity.
+  Growth stages are on the Zadoks scale, interpolated between observed stage dates. Thermal time uses a 0 °C base from sowing on 15 Nov 2024.
+</footer>
+</div>
+
+<script>window.__DATA__ = __DATA_JSON__;</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+if (typeof Chart === "undefined") {
+  document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"><\/script>');
+}
+</script>
+<script>
+(function(){
+"use strict";
+const D = window.__DATA__;
+if(!D.synthetic){ const st=document.getElementById("synthTag"); if(st) st.hidden=true; }
+const N = D.dates.length;
+const dIdx = Object.fromEntries(D.dates.map((d,i)=>[d,i]));
+const SOW = dIdx["2024-11-15"];
+const TRT = {FULL:{name:"Full irrigation",short:"Full",var:"--full"},DEFICIT:{name:"Deficit irrigation",short:"Deficit",var:"--deficit"},RAINFED:{name:"Rainfed",short:"Rainfed",var:"--rainfed"}};
+const TRT_ORDER = ["FULL","DEFICIT","RAINFED"];
+const plots = D.plots;
+const byId = Object.fromEntries(plots.map(p=>[p.id,p]));
+
+const state = {
+  idx: dIdx["2025-05-20"] ?? Math.floor(N*0.7),
+  mapVar: "raw",
+  plot: "P05",
+  canVar: "ndvi",
+  wxView: "temp",
+  playing: false
+};
+
+// ---------- helpers ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtDate = (s,opt) => !s ? "–" : new Date(s+"T12:00:00").toLocaleDateString("en-GB", opt||{day:"numeric",month:"short",year:"numeric"});
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const r1 = v => v==null||isNaN(v) ? "–" : (Math.round(v*10)/10).toLocaleString("en-GB",{minimumFractionDigits:1,maximumFractionDigits:1});
+const r0 = v => v==null||isNaN(v) ? "–" : Math.round(v).toLocaleString("en-GB");
+const median = a => { const b=a.filter(v=>v!=null&&!isNaN(v)).sort((x,y)=>x-y); if(!b.length) return null; const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; };
+function hex2rgb(h){h=h.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function ramp(stops, t){ // stops: [[pos,hex],...]
+  if(t<=stops[0][0]) return stops[0][1];
+  for(let i=1;i<stops.length;i++){
+    if(t<=stops[i][0]){
+      const [p0,c0]=stops[i-1],[p1,c1]=stops[i]; const f=(t-p0)/(p1-p0);
+      const a=hex2rgb(c0),b=hex2rgb(c1);
+      return "#"+a.map((v,k)=>Math.round(v+(b[k]-v)*f).toString(16).padStart(2,"0")).join("");
+    }
+  }
+  return stops[stops.length-1][1];
+}
+const textOn = hex => { const [r,g,b]=hex2rgb(hex); return (0.299*r+0.587*g+0.114*b)>150 ? "#1B2016" : "#F6F3E8"; };
+
+// thermal time
+const gdd = new Array(N).fill(0);
+for(let i=SOW;i<N;i++){ const t=D.weather.tmean[i]; gdd[i]=(i>SOW?gdd[i-1]:0)+Math.max(0,t??0); }
+
+// canopy daily sparse arrays per plot
+const CAN_VARS = {ndvi:{label:"NDVI",key:"ndvi",unit:""},ctd:{label:"Canopy–air temp.",key:"ctd",unit:"°C"},lai:{label:"LAI",key:"lai",unit:"m²/m²"},h:{label:"Height",key:"h",unit:"cm"},spad:{label:"SPAD",key:"spad",unit:""}};
+plots.forEach(p=>{
+  p.can = {}; p.canFlag = {};
+  Object.keys(CAN_VARS).forEach(k=>{ p.can[k]=new Array(N).fill(null); });
+  p.canFlagArr = new Array(N).fill(null);
+  p.canopy.forEach(o=>{ const i=dIdx[o.d]; if(i==null) return;
+    if(o.flag){ p.canFlagArr[i]=o.ndvi; p.canFlag[i]=true; }
+    Object.keys(CAN_VARS).forEach(k=>{ if(!(o.flag&&k==="ndvi")) p.can[k][i]=o[CAN_VARS[k].key]; });
+  });
+  p.irrArr = new Array(N).fill(null); p.irrigation.forEach(o=>{ const i=dIdx[o.d]; if(i!=null) p.irrArr[i]=o.mm; });
+  p.harvIdx = dIdx[p.harvest.harvest_date];
+  p.zIdx = Object.fromEntries(Object.entries(p.pheno).map(([z,d])=>[+z,dIdx[d]]));
+});
+// treatment medians for canopy
+const trtMed = {};
+TRT_ORDER.forEach(t=>{ trtMed[t]={}; Object.keys(CAN_VARS).forEach(k=>{
+  trtMed[t][k]=D.dates.map((_,i)=>{ const vals=plots.filter(p=>p.trt===t).map(p=>p.can[k][i]).filter(v=>v!=null); return vals.length>=3?median(vals):null; });
+});});
+
+function interpCan(p,k,i){
+  const a=p.can[k]; let lo=-1,hi=-1;
+  for(let j=i;j>=0;j--) if(a[j]!=null){lo=j;break;}
+  for(let j=i;j<N;j++) if(a[j]!=null){hi=j;break;}
+  if(lo<0) return null;
+  if(p.harvIdx!=null && i>p.harvIdx) return null;
+  if(hi<0) return (i-lo)<=7 ? a[lo] : null;
+  if(hi===lo) return a[lo];
+  return a[lo]+(a[hi]-a[lo])*(i-lo)/(hi-lo);
+}
+function zadoks(p,i){
+  if(i<SOW) return null;
+  if(p.harvIdx!=null && i>=p.harvIdx) return 99;
+  const pts=[[SOW,0],[p.zIdx[10],10],[p.zIdx[30],30],[p.zIdx[65],65],[p.zIdx[92],92]];
+  if(i>=pts[4][0]) return 92;
+  for(let k=1;k<pts.length;k++) if(i<=pts[k][0]){ const [a,za]=pts[k-1],[b,zb]=pts[k]; return za+(zb-za)*(i-a)/Math.max(1,b-a); }
+  return 92;
+}
+function stageName(z){
+  if(z==null) return "Before sowing";
+  if(z>=99) return "Harvested";
+  if(z<10) return "Sown, not yet emerged";
+  if(z<30) return "Seedling and tillering";
+  if(z<40) return "Stem elongation";
+  if(z<50) return "Booting";
+  if(z<60) return "Heading";
+  if(z<70) return "Flowering";
+  if(z<90) return "Grain filling";
+  return "Ripening";
+}
+const inSeason = (p,i) => { const z=zadoks(p,i); return z!=null && z>=10 && z<92; };
+
+// ---------- map variables ----------
+const MAPVARS = {
+  raw:{label:"Root-zone water",desc:"Share of plant-available water in the root zone",unit:"%",
+    get:(p,i)=>p.raw[i]==null?null:p.raw[i]*100, fmt:r0, stops:[[0,"#A3432B"],[30,"#D59A3E"],[55,"#E6DDB8"],[80,"#6FA0C8"],[100,"#2B5A87"]], min:0,max:100},
+  v30:{label:"Soil moisture 30 cm",desc:"Volumetric water content at 30 cm depth",unit:"%",
+    get:(p,i)=>p.v30[i], fmt:r1, stops:[[12,"#A3432B"],[20,"#D59A3E"],[27,"#E6DDB8"],[33,"#6FA0C8"],[40,"#2B5A87"]], min:12,max:40},
+  ndvi:{label:"NDVI",desc:"Canopy greenness, interpolated between weekly flights",unit:"",
+    get:(p,i)=>interpCan(p,"ndvi",i), fmt:v=>v==null?"–":v.toFixed(2), stops:[[0.1,"#8E7652"],[0.3,"#C4B06A"],[0.55,"#8DB35A"],[0.75,"#3F7D3A"],[0.9,"#1E4F2E"]], min:0.1,max:0.9},
+  ctd:{label:"Canopy–air temp.",desc:"Canopy minus air temperature at 13:00. Positive values point to closed stomata.",unit:"°C",
+    get:(p,i)=>interpCan(p,"ctd",i), fmt:v=>v==null?"–":(v>0?"+":"")+r1(v), stops:[[-4,"#2B5A87"],[-1.5,"#8DB4D5"],[0,"#E8E3D2"],[1.5,"#E0A070"],[4,"#A3432B"]], min:-4,max:4},
+  stage:{label:"Growth stage",desc:"Zadoks growth stage, interpolated between observations",unit:"",
+    get:(p,i)=>zadoks(p,i), fmt:v=>v==null?"–":v>=99?"Harv.":"Z"+Math.round(v), stops:[[0,"#D8CFB6"],[10,"#B8C98A"],[30,"#6FA35A"],[65,"#3E7A3E"],[80,"#B8A040"],[92,"#C9952A"],[99,"#8C8A80"]], min:0,max:92},
+  outlook:{label:"Water in 7 days",desc:"Forecast root-zone water 7 days after the selected date (hybrid model, data up to that date only)",unit:"%",
+    get:(p,i)=>p.outlook&&p.outlook[i]!=null?p.outlook[i]*100:null, fmt:r0, stops:[[0,"#A3432B"],[30,"#D59A3E"],[55,"#E6DDB8"],[80,"#6FA0C8"],[100,"#2B5A87"]], min:0,max:100},
+  yfc:{label:"Yield forecast",desc:"Latest in-season yield forecast available on the selected date (Z30, Z65 or mid grain filling)",unit:"t/ha",
+    get:(p,i)=>{ const f=latestYfc(p,i); return f?f.pred:null; }, fmt:v=>v==null?"–":v.toFixed(2), stops:[[3,"#F1E4B6"],[5,"#D6AA45"],[8,"#6E5010"]], min:3,max:8},
+  yield:{label:"Grain yield",desc:"Harvested grain yield, shown once the plot is harvested",unit:"t/ha",
+    get:(p,i)=>(p.harvIdx!=null&&i>=p.harvIdx)?p.harvest.grain_yield:null, fmt:v=>v==null?"–":v.toFixed(2), stops:[[3,"#F1E4B6"],[5,"#D6AA45"],[8,"#6E5010"]], min:3,max:8}
+};
+
+if(!D.models){ delete MAPVARS.outlook; delete MAPVARS.yfc; }
+function latestYfc(p,i){ let f=null; (p.yfc||[]).forEach(x=>{ const j=dIdx[x.d]; if(j!=null&&j<=i) f=x; }); return f; }
+const POINT_NAME={"Z30":"stem elongation","Z65":"anthesis","Z65+21":"mid grain filling"};
+
+// ---------- DOM: segmented controls ----------
+function buildSeg(el, items, cur, onPick){
+  el.innerHTML="";
+  Object.entries(items).forEach(([k,v])=>{
+    const b=document.createElement("button"); b.type="button"; b.textContent=v.label||v; b.setAttribute("aria-pressed",String(k===cur));
+    b.addEventListener("click",()=>{ [...el.children].forEach(c=>c.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); onPick(k); });
+    el.appendChild(b);
+  });
+}
+buildSeg(document.getElementById("varSeg"), MAPVARS, state.mapVar, k=>{state.mapVar=k; renderMap();});
+buildSeg(document.getElementById("canSeg"), CAN_VARS, state.canVar, k=>{state.canVar=k; buildCanChart();});
+buildSeg(document.getElementById("wxSeg"), {temp:"Temperature and rain",vpd:"VPD and ET₀"}, state.wxView, k=>{state.wxView=k; buildWxChart();});
+
+// ---------- field map ----------
+const grid=document.getElementById("plotgrid");
+const cells={};
+[1,2,3,4].forEach(b=>{
+  const lab=document.createElement("div"); lab.className="blk"; lab.textContent="Block "+b; grid.appendChild(lab);
+  plots.filter(p=>p.block===b).forEach(p=>{
+    const c=document.createElement("button"); c.type="button"; c.className="cell";
+    c.innerHTML=`<span class="strip" style="background:var(${TRT[p.trt].var})"></span><span><span class="id">${p.id}</span> <span class="tr">${TRT[p.trt].short} ${p.cv.replace("CV_","")}</span></span><span class="qc"></span><span class="val"></span>`;
+    c.addEventListener("click",()=>selectPlot(p.id));
+    grid.appendChild(c); cells[p.id]=c;
+  });
+});
+function renderMap(){
+  const mv=MAPVARS[state.mapVar], i=state.idx;
+  document.getElementById("mapDate").textContent=fmtDate(D.dates[i]);
+  document.getElementById("varDesc").textContent=mv.desc;
+  plots.forEach(p=>{
+    const c=cells[p.id], v=mv.get(p,i);
+    const valEl=c.querySelector(".val");
+    if(v==null||isNaN(v)){
+      c.classList.add("na"); c.style.background=""; c.style.color="";
+      valEl.innerHTML = state.mapVar==="yield" ? '<small>not harvested</small>' : (p.nobs[i]===0 && (state.mapVar==="raw"||state.mapVar==="v30")) ? '<small>no data</small>' : "–";
+    } else {
+      const t=Math.min(Math.max(v,mv.stops[0][0]),mv.stops[mv.stops.length-1][0]);
+      const bg=ramp(mv.stops,t); c.classList.remove("na"); c.style.background=bg; c.style.color=textOn(bg);
+      valEl.innerHTML = mv.fmt(v) + (mv.unit?`<small>${mv.unit}</small>`:"");
+    }
+    const qc=[];
+    if(i>=SOW && p.nobs[i]===0) qc.push('<i class="off" title="Sensor offline"></i>');
+    if(p.drift[i]) qc.push('<i class="drift" title="Sensor drift"></i>');
+    if(p.canFlag[i]) qc.push('<i class="ndvi" title="NDVI rejected"></i>');
+    c.querySelector(".qc").innerHTML=qc.join("");
+    c.setAttribute("aria-pressed",String(p.id===state.plot));
+    c.setAttribute("aria-label",`${p.id}, ${TRT[p.trt].name}, cultivar ${p.cv.replace("CV_","")}: ${mv.label} ${v==null?"no value":mv.fmt(v)+" "+mv.unit}`);
+  });
+  const st=mv.stops, gradient=`linear-gradient(90deg,${st.map(s=>`${s[1]} ${((s[0]-st[0][0])/(st[st.length-1][0]-st[0][0])*100).toFixed(0)}%`).join(",")})`;
+  document.getElementById("ramp").innerHTML=`<span>${mv.fmt(st[0][0])}</span><span class="bar" style="background:${gradient}"></span><span>${mv.fmt(st[st.length-1][0])}${mv.unit?" "+mv.unit:""}</span>`;
+}
+
+// ---------- state panel & alerts ----------
+function renderState(){
+  const i=state.idx, w=D.weather, d=D.dates[i];
+  document.getElementById("stDate").textContent=fmtDate(d,{day:"numeric",month:"long"});
+  const das=i-SOW;
+  document.getElementById("stSub").textContent = das>=0 ? `${new Date(d+"T12:00").getFullYear()}. Day ${das} after sowing, ${r0(gdd[i])} °C·day thermal time.` : `${new Date(d+"T12:00").getFullYear()}. ${-das} days before sowing.`;
+  const zs=plots.map(p=>zadoks(p,i)); const zm=median(zs);
+  document.getElementById("stStage").textContent = "Field stage: "+stageName(zm)+(zm!=null&&zm<99?` (median Z${Math.round(zm)})`:"");
+  const sum=(a,from,to)=>{let s=0;for(let k=Math.max(0,from);k<=to;k++) s+=a[k]||0; return s;};
+  const facts=[
+    ["Mean air temp.", r1(w.tmean[i]), "°C"],["Max / min", `${r0(w.tmax[i])} / ${r0(w.tmin[i])}`, "°C"],["Max VPD", w.vpdmax[i]==null?"–":w.vpdmax[i].toFixed(2), "kPa"],
+    ["Rain today", r1(w.rain[i]), "mm"],["Rain, 7 days", r1(sum(w.rain,i-6,i)), "mm"],["ET₀, 7 days", r1(sum(w.et0,i-6,i)), "mm"]
+  ];
+  document.getElementById("stFacts").innerHTML=facts.map(f=>`<div><dt>${f[0]}</dt><dd>${f[1]} <small>${f[2]}</small></dd></div>`).join("");
+  renderAlerts();
+}
+function renderAlerts(){
+  const i=state.idx, w=D.weather, out=[];
+  const act=plots.filter(p=>inSeason(p,i));
+  const AL=D.alerts||{raw_severe:0.25,raw_moderate:0.45,vpd_high:3,heat_c:32,frost_c:-2};
+  const sev=act.filter(p=>p.raw[i]!=null&&p.raw[i]<AL.raw_severe), mod=act.filter(p=>p.raw[i]!=null&&p.raw[i]>=AL.raw_severe&&p.raw[i]<AL.raw_moderate);
+  if(sev.length) out.push({c:"--bad",t:"Severe water stress",m:`Root-zone water below ${Math.round(AL.raw_severe*100)}% of available. Irrigate now if these plots are meant to be well watered.`,p:sev});
+  if(mod.length) out.push({c:"--warn",t:"Water stress building",m:`Root-zone water between ${Math.round(AL.raw_severe*100)}% and ${Math.round(AL.raw_moderate*100)}%. Stomata begin to close in this range.`,p:mod});
+  if(D.models){ const soon=act.filter(p=>p.warn&&p.warn[i]);
+    if(soon.length) out.push({c:"--warn",t:"Water stress expected within 7 days",m:"The forecast puts root-zone water below 45% within a week, with no rain assumed beyond the climate average. Plan irrigation now.",p:soon}); }
+  const zm=median(plots.map(p=>zadoks(p,i)));
+  if(zm!=null&&zm>=60&&zm<92&&w.vpdmax[i]>AL.vpd_high) out.push({c:"--warn",t:"High evaporative demand in grain fill",m:`Maximum VPD reached ${w.vpdmax[i].toFixed(1)} kPa. Expect faster canopy warming in unirrigated plots.`,p:[]});
+  if(zm!=null&&zm>=60&&zm<92&&w.tmax[i]>=AL.heat_c) out.push({c:"--bad",t:"Heat during grain fill",m:`Air temperature reached ${r0(w.tmax[i])} °C. Grain weight losses are likely above ${AL.heat_c} °C.`,p:[]});
+  if(zm!=null&&zm>=30&&zm<70&&w.tmin[i]<=AL.frost_c) out.push({c:"--bad",t:"Frost risk after stem elongation",m:`Minimum air temperature ${r1(w.tmin[i])} °C. Check spikes for damage.`,p:[]});
+  const off=plots.filter(p=>i>=SOW&&p.nobs[i]===0); if(off.length) out.push({c:"--info",t:"Soil sensor offline",m:"No readings received today. Values are left blank rather than filled.",p:off});
+  const dr=plots.filter(p=>p.drift[i]); if(dr.length) out.push({c:"--info",t:"Sensor drift at 10 cm",m:"Available water left the norm of its treatment group (SaQC drift-from-norm). Check or re-seat the probe.",p:dr});
+  const nf=plots.filter(p=>p.canFlag[i]); if(nf.length) out.push({c:"--info",t:"NDVI reading rejected",m:"Value dropped far below neighbouring flights and the treatment median.",p:nf});
+  const sp=plots.reduce((s,p)=>s+(p.spk[i]||0),0); if(sp) out.push({c:"--info",t:`${sp} spike reading${sp>1?"s":""} removed`,m:"Single-hour jumps in 10 cm moisture were excluded from daily means.",p:plots.filter(p=>p.spk[i]>0)});
+  const ul=document.getElementById("alerts");
+  if(!out.length){ ul.innerHTML='<li class="none">No alerts on this date.</li>'; return; }
+  ul.innerHTML="";
+  out.forEach(a=>{
+    const li=document.createElement("li"); li.style.setProperty("--c",`var(${a.c})`);
+    li.innerHTML=`<strong>${a.t}</strong><span>${a.m}</span>`;
+    if(a.p.length){ const box=document.createElement("div"); box.className="plots";
+      a.p.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.textContent=p.id; b.title=TRT[p.trt].name; b.addEventListener("click",()=>selectPlot(p.id)); box.appendChild(b); });
+      li.appendChild(box); }
+    ul.appendChild(li);
+  });
+}
+
+// ---------- timeline ----------
+const slider=document.getElementById("slider"); slider.max=N-1; slider.value=state.idx;
+slider.addEventListener("input",()=>setIdx(+slider.value));
+const tl=document.getElementById("tlCanvas");
+function drawTimeline(){
+  const dpr=window.devicePixelRatio||1, W=tl.clientWidth, H=74;
+  tl.width=W*dpr; tl.height=H*dpr; const g=tl.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const x=i=>(i+0.5)/N*W, bw=Math.max(1,W/N-0.5);
+  // stage band
+  for(let i=0;i<N;i++){ const z=median(plots.map(p=>zadoks(p,i))); if(z==null) continue;
+    g.fillStyle=ramp(MAPVARS.stage.stops,Math.min(z,99)); g.fillRect(x(i)-W/N/2,42,W/N+0.6,9); }
+  // rain bars
+  g.fillStyle="#8FB0CF"; D.weather.rain.forEach((r,i)=>{ if(r>0){ const h=Math.min(34,r*1.4); g.fillRect(x(i)-bw/2,38-h,bw,h);} });
+  // irrigation & fertilizer ticks
+  const ev=(i,col,y)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(x(i),y); g.lineTo(x(i)-4,y+6); g.lineTo(x(i)+4,y+6); g.fill(); };
+  const f=byId.P01.irrigation, dd=byId.P03.irrigation;
+  f.forEach(o=>ev(dIdx[o.d],css("--full"),54)); dd.forEach(o=>ev(dIdx[o.d],css("--deficit"),54));
+  D.mgmt.filter(m=>m.type==="FERTILIZER").forEach(m=>ev(dIdx[m.d],css("--wheat"),54));
+  // months
+  g.fillStyle=css("--muted"); g.font="11px "+css("--font"); g.textBaseline="bottom";
+  D.dates.forEach((d,i)=>{ if(d.endsWith("-01")){ g.fillRect(x(i),0,1,H-14); g.globalAlpha=1; g.fillText(MONTHS[+d.slice(5,7)-1],x(i)+3,H); } });
+  // cursor
+  g.fillStyle=css("--wheat"); g.fillRect(x(state.idx)-1,0,2,H-14);
+}
+
+const playBtn=document.getElementById("playBtn");
+const ICON_PLAY='<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>';
+const ICON_PAUSE='<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5h3v11H3zM8 1.5h3v11H8z" fill="currentColor"/></svg>';
+playBtn.innerHTML=ICON_PLAY;
+let timer=null;
+playBtn.addEventListener("click",()=>{
+  state.playing=!state.playing;
+  playBtn.innerHTML=state.playing?ICON_PAUSE:ICON_PLAY; playBtn.setAttribute("aria-label",state.playing?"Pause":"Play season");
+  if(state.playing){ if(state.idx>=N-1) setIdx(SOW); timer=setInterval(()=>{ if(state.idx>=N-1){ playBtn.click(); return; } setIdx(Math.min(N-1,state.idx+2)); },110); }
+  else clearInterval(timer);
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.key==="ArrowRight"){ setIdx(Math.min(N-1,state.idx+1)); } else if(e.key==="ArrowLeft"){ setIdx(Math.max(0,state.idx-1)); }
+});
+
+// ---------- charts ----------
+if(typeof Chart==="undefined"){ document.querySelectorAll(".chart-box").forEach(b=>b.innerHTML='<p class="loading">The chart library did not load. Check the network connection and reload the page.</p>'); }
+const charts={};
+const cursorPlugin={id:"cursor",afterDatasetsDraw(ch){
+  if(!ch.options.plugins.cursor) return; const xs=ch.scales.x; const {top,bottom}=ch.chartArea;
+  const px=xs.getPixelForValue(state.idx); const g=ch.ctx; g.save(); g.strokeStyle=css("--wheat"); g.lineWidth=2; g.beginPath(); g.moveTo(px,top); g.lineTo(px,bottom); g.stroke(); g.restore();
+}};
+const shadePlugin={id:"shade",beforeDatasetsDraw(ch){
+  const sh=ch.options.plugins.shade; if(!sh) return; const xs=ch.scales.x,{top,bottom}=ch.chartArea,g=ch.ctx; const w=xs.width/N;
+  g.save(); sh.forEach(s=>{ g.fillStyle=s.color; s.flags.forEach((f,i)=>{ if(f) g.fillRect(xs.getPixelForValue(i)-w/2,top,w+0.5,bottom-top); }); }); g.restore();
+}};
+function baseOpts(){
+  const muted=css("--muted"), line=css("--line");
+  return {responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},
+    plugins:{legend:{position:"bottom",labels:{color:muted,boxWidth:12,boxHeight:3,font:{family:css("--font"),size:11},usePointStyle:false}},
+      tooltip:{callbacks:{title:items=>items.length?fmtDate(D.dates[items[0].dataIndex]):""}},cursor:true},
+    scales:{x:{type:"category",ticks:{autoSkip:false,maxRotation:0,color:muted,font:{family:css("--font"),size:11},callback:(v,i)=>D.dates[i]&&D.dates[i].endsWith("-01")?MONTHS[+D.dates[i].slice(5,7)-1]:null},
+      grid:{color:c=>D.dates[c.index]&&D.dates[c.index].endsWith("-01")?line:"transparent",drawTicks:false},border:{color:line}},
+      y:{ticks:{color:muted,font:{family:css("--font"),size:11}},grid:{color:line},border:{display:false}}}};
+}
+const clickToDate = (evt,els,ch)=>{ const xs=ch.scales.x; const v=xs.getValueForPixel(evt.x); if(v!=null) setIdx(Math.max(0,Math.min(N-1,Math.round(v)))); };
+
+function buildSoilChart(){
+  if(typeof Chart==="undefined") return;
+  const p=byId[state.plot], sp=D.soilParams[p.soil], o=baseOpts();
+  o.onClick=clickToDate;
+  o.plugins.shade=[{color:css("--shade-drift"),flags:p.drift},{color:css("--shade-off"),flags:p.nobs.map((n,i)=>i>=SOW&&n===0)}];
+  o.scales.y.title={display:true,text:"Soil water, % vol.",color:css("--muted"),font:{size:11}};
+  o.scales.y.suggestedMin=sp.wp-4; o.scales.y.suggestedMax=sp.fc+6;
+  o.scales.y2={position:"right",min:0,max:80,ticks:{color:css("--muted"),font:{size:11}},grid:{display:false},border:{display:false},title:{display:true,text:"Rain and irrigation, mm",color:css("--muted"),font:{size:11}}};
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?null:`${c.dataset.label}: ${typeof c.raw==="number"?c.raw.toFixed(1):c.raw}`;
+  const water=css("--full");
+  const ds=[
+    {type:"line",label:"10 cm",data:p.v10,borderColor:"#8DB4D5",borderWidth:1.6,pointRadius:0,spanGaps:false,yAxisID:"y"},
+    {type:"line",label:"30 cm",data:p.v30,borderColor:water,borderWidth:1.8,pointRadius:0,spanGaps:false,yAxisID:"y"},
+    {type:"line",label:"60 cm",data:p.v60,borderColor:"#1E3F5F",borderWidth:1.8,pointRadius:0,spanGaps:false,yAxisID:"y"},
+    {type:"line",label:"Field capacity",data:new Array(N).fill(sp.fc),borderColor:css("--muted"),borderDash:[5,4],borderWidth:1,pointRadius:0,yAxisID:"y"},
+    {type:"line",label:"Wilting point",data:new Array(N).fill(sp.wp),borderColor:css("--bad"),borderDash:[5,4],borderWidth:1,pointRadius:0,yAxisID:"y"},
+    {type:"bar",label:"Rain",data:D.weather.rain.map(r=>r>0?r:null),backgroundColor:"rgba(143,176,207,.55)",yAxisID:"y2",barPercentage:1,categoryPercentage:1},
+    {type:"bar",label:"Irrigation",data:p.irrArr,backgroundColor:css(TRT[p.trt].var),yAxisID:"y2",barPercentage:1,categoryPercentage:1}
+  ];
+  if(charts.soil) charts.soil.destroy();
+  charts.soil=new Chart(document.getElementById("soilChart"),{data:{labels:D.dates,datasets:ds},options:o,plugins:[cursorPlugin,shadePlugin]});
+}
+function buildCanChart(){
+  if(typeof Chart==="undefined") return;
+  const p=byId[state.plot], k=state.canVar, cv=CAN_VARS[k], o=baseOpts();
+  o.onClick=clickToDate; o.interaction={mode:"nearest",intersect:false,axis:"x"};
+  o.scales.y.title={display:true,text:cv.label+(cv.unit?`, ${cv.unit}`:""),color:css("--muted"),font:{size:11}};
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?null:`${c.dataset.label}: ${(+c.raw).toFixed(k==="ndvi"?2:1)}`;
+  const ds=TRT_ORDER.map(t=>({type:"line",label:TRT[t].short+" median",data:trtMed[t][k],borderColor:css(TRT[t].var),borderWidth:1.3,pointRadius:0,spanGaps:true,borderDash:t===p.trt?[]:[3,3]}));
+  ds.push({type:"line",label:p.id,data:p.can[k],borderColor:css("--ink"),backgroundColor:css("--ink"),borderWidth:2,pointRadius:3,spanGaps:true});
+  if(k==="ndvi") ds.push({type:"line",label:"Rejected",data:p.canFlagArr,showLine:false,pointStyle:"crossRot",pointRadius:7,borderColor:css("--bad"),borderWidth:2});
+  if(k==="ctd"){ o.scales.y.grid={color:c=>c.tick.value===0?css("--muted"):css("--line")}; }
+  if(charts.can) charts.can.destroy();
+  charts.can=new Chart(document.getElementById("canChart"),{data:{labels:D.dates,datasets:ds},options:o,plugins:[cursorPlugin]});
+}
+function buildWxChart(){
+  if(typeof Chart==="undefined") return;
+  const w=D.weather,o=baseOpts(); o.onClick=clickToDate;
+  let ds;
+  if(state.wxView==="temp"){
+    o.scales.y.title={display:true,text:"Air temperature, °C",color:css("--muted"),font:{size:11}};
+    o.scales.y2={position:"right",min:0,max:40,ticks:{color:css("--muted"),font:{size:11}},grid:{display:false},border:{display:false},title:{display:true,text:"Rain, mm",color:css("--muted"),font:{size:11}}};
+    ds=[{type:"line",label:"Max",data:w.tmax,borderColor:css("--rainfed"),borderWidth:1,pointRadius:0,fill:"+1",backgroundColor:"rgba(163,67,43,.10)"},
+        {type:"line",label:"Min",data:w.tmin,borderColor:css("--full"),borderWidth:1,pointRadius:0},
+        {type:"line",label:"Mean",data:w.tmean,borderColor:css("--ink"),borderWidth:1.6,pointRadius:0},
+        {type:"bar",label:"Rain",data:w.rain.map(r=>r>0?r:null),backgroundColor:"rgba(143,176,207,.8)",yAxisID:"y2",barPercentage:1,categoryPercentage:1}];
+  } else {
+    o.scales.y.title={display:true,text:"Max VPD, kPa",color:css("--muted"),font:{size:11}};
+    o.scales.y2={position:"right",min:0,max:10,ticks:{color:css("--muted"),font:{size:11}},grid:{display:false},border:{display:false},title:{display:true,text:"ET₀, mm/day",color:css("--muted"),font:{size:11}}};
+    ds=[{type:"line",label:"Max VPD",data:w.vpdmax,borderColor:css("--deficit"),borderWidth:1.6,pointRadius:0},
+        {type:"line",label:"ET₀",data:w.et0,borderColor:css("--full"),borderWidth:1.4,pointRadius:0,yAxisID:"y2"}];
+  }
+  o.plugins.tooltip.callbacks.label=c=>c.raw==null?null:`${c.dataset.label}: ${(+c.raw).toFixed(1)}`;
+  if(charts.wx) charts.wx.destroy();
+  charts.wx=new Chart(document.getElementById("wxChart"),{data:{labels:D.dates,datasets:ds},options:o,plugins:[cursorPlugin]});
+}
+const GROUPS=[];TRT_ORDER.forEach(t=>["CV_A","CV_B"].forEach(c=>GROUPS.push([t,c])));
+function buildYieldChart(){
+  if(typeof Chart==="undefined") return;
+  const muted=css("--muted"),line=css("--line");
+  const ds=[];
+  GROUPS.forEach(([t,c],gi)=>{
+    const ps=plots.filter(p=>p.trt===t&&p.cv===c&&p.harvest.grain_yield!=null);
+    if(!ps.length) return;
+    const m=ps.reduce((s,p)=>s+p.harvest.grain_yield,0)/ps.length;
+    ds.push({type:"line",label:"mean",data:[{x:gi-0.32,y:m},{x:gi+0.32,y:m}],borderColor:css(TRT[t].var),borderWidth:2,pointRadius:0,isMean:true});
+    ds.push({type:"scatter",label:`${TRT[t].short} ${c.replace("CV_","")}`,data:ps.map((p,k)=>({x:gi+(k-1.5)*0.12,y:p.harvest.grain_yield,id:p.id})),
+      backgroundColor:css(TRT[t].var),pointRadius:ps.map(p=>p.id===state.plot?8:5),pointBorderColor:ps.map(p=>p.id===state.plot?css("--ink"):"transparent"),pointBorderWidth:2.5,pointHoverRadius:8});
+  });
+  const o={responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false},cursor:false,tooltip:{filter:it=>!it.dataset.isMean,callbacks:{label:c=>`${c.raw.id}: ${c.raw.y.toFixed(2)} t/ha`}}},
+    scales:{x:{type:"linear",min:-0.6,max:5.6,ticks:{stepSize:1,color:muted,font:{family:css("--font"),size:11},callback:v=>Number.isInteger(v)&&GROUPS[v]?`${TRT[GROUPS[v][0]].short} ${GROUPS[v][1].replace("CV_","")}`:""},grid:{display:false},border:{color:line}},
+      y:{title:{display:true,text:"Grain yield, t/ha",color:muted,font:{size:11}},ticks:{color:muted},grid:{color:line},border:{display:false}}},
+    onClick:(e,els,ch)=>{ const el=els.find(x=>!ch.data.datasets[x.datasetIndex].isMean); if(el){ const id=ch.data.datasets[el.datasetIndex].data[el.index].id; selectPlot(id); } }};
+  if(charts.y) charts.y.destroy();
+  charts.y=new Chart(document.getElementById("yChart"),{data:{datasets:ds},options:o});
+}
+
+// ---------- plot detail text ----------
+function renderPlotHead(){
+  const p=byId[state.plot];
+  document.getElementById("plotTitle").textContent=p.id;
+  const pill=document.getElementById("plotPill"); pill.textContent=TRT[p.trt].name; pill.style.setProperty("--c",`var(${TRT[p.trt].var})`);
+  document.getElementById("plotMeta").textContent=`Cultivar ${p.cv.replace("CV_","")}, block ${p.block}, ${p.soil} soil, ${p.area} m².`;
+  const h=p.harvest, irr=p.irrigation.reduce((s,o)=>s+o.mm,0), bm=Object.fromEntries(p.biomass.map(b=>[b.z,b]));
+  const kv=[["Grain yield",h.grain_yield==null?"Not harvested":`${h.grain_yield.toFixed(2)} t/ha`],["1000-grain weight",`${r1(h.tkw)} g`],["Spikes",`${r0(h.spikes_m2)} /m²`],["Grain protein",`${r1(h.grain_protein)}%`],["Harvest index",h.harvest_index==null?"–":h.harvest_index.toFixed(2)],
+    ["Biomass at Z30",bm[30]?`${r0(bm[30].bm)} g/m²`:"–"],["Biomass at Z65",bm[65]?`${r0(bm[65].bm)} g/m²`:"–"],["Biomass at Z92",bm[92]?`${r0(bm[92].bm)} g/m²`:"–"],
+    ...(p.yfc||[]).map(x=>[`Yield forecast at ${POINT_NAME[x.point]}`,`${x.pred.toFixed(2)} t/ha <small>(${x.lo.toFixed(1)}–${x.hi.toFixed(1)})</small>`]),
+    ["Irrigation total",`${irr} mm`],["Flowering (Z65)",fmtDate(p.pheno[65],{day:"numeric",month:"short"})],["Harvested",fmtDate(h.harvest_date,{day:"numeric",month:"short"})],["Spikes removed",`${p.spikes} readings`]];
+  document.getElementById("plotKv").innerHTML=kv.map(k=>`<div><dt>${k[0]}</dt><dd>${k[1]}</dd></div>`).join("");
+}
+
+// ---------- data quality table ----------
+function runs(flags){ const out=[]; let s=-1; flags.forEach((f,i)=>{ if(f&&s<0) s=i; if(!f&&s>=0){ out.push([s,i-1]); s=-1; } }); if(s>=0) out.push([s,flags.length-1]); return out; }
+function renderQuality(){
+  const L={drift:["--deficit","Sensor drift"],drift_check:["--muted","Check probe"],outage:["--muted","Sensor offline"],ndvi:["--rainfed","NDVI rejected"]};
+  const DID={drift:e=>`Flagged by ${e.by}. Values kept, since drift cannot be corrected without a reference reading.`,
+    drift_check:e=>"Secondary peer-trend rule only. Low priority; not shown as an alert.",
+    outage:e=>`Left ${(new Date(e.end)-new Date(e.start))/864e5+1} days blank. No gap filling.`,
+    ndvi:e=>`Excluded ${e.by.replace("NDVI ","")}. Below ${Math.round(D.qc.params.ndvi_ratio*100)}% of both the neighbouring flights and the treatment median.`};
+  const short=d=>fmtDate(d,{day:"numeric",month:"short"});
+  const rows=D.qc.events.map(e=>({c:L[e.type][0],issue:L[e.type][1],plot:e.plot,start:dIdx[e.start],when:e.start===e.end?short(e.start):`${short(e.start)} to ${short(e.end)}`,did:DID[e.type](e)}));
+  const tot=plots.reduce((s,p)=>s+p.spikes,0), top=[...plots].sort((a,b)=>b.spikes-a.spikes)[0], P=D.qc.params;
+  rows.push({c:"--info",issue:"Spikes removed",plot:"All",start:null,when:"Whole season",did:`${tot} hourly 10 cm readings removed: above field capacity + ${P.range_margin}% or more than ${P.spike_k}% from the ${P.spike_window_h}-hour median. Most in ${top.id} (${top.spikes}).`});
+  document.getElementById("qSum").textContent=`${rows.length-1} events across ${new Set(rows.filter(r=>r.plot!=="All").map(r=>r.plot)).size} plots, plus spike filtering`;
+  const tb=document.getElementById("qBody"); tb.innerHTML="";
+  rows.forEach(r=>{ const tr=document.createElement("tr"); tr.tabIndex=0;
+    tr.innerHTML=`<td><span class="tag" style="--c:var(${r.c})">${r.issue}</span></td><td>${r.plot}</td><td>${r.when}</td><td>${r.did}</td>`;
+    const go=()=>{ if(r.plot!=="All") selectPlot(r.plot); if(r.start!=null) setIdx(r.start); document.getElementById("plotTitle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}); };
+    tr.addEventListener("click",go); tr.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); });
+    tb.appendChild(tr); });
+}
+function renderTrialQC(){
+  const Q=D.qc, P=Q.params, SC={"clay loam":"#8C6A43","loam":"#C9A66B"};
+  document.getElementById("verTag").textContent=`Platform v${D.version}.`;
+  document.getElementById("tqEngine").textContent=Q.engine==="saqc"?"Drift engine: SaQC drift-from-norm":"Drift engine: peer-trend rule (SaQC not installed)";
+  const g=document.getElementById("tqGroups"); g.innerHTML="";
+  Q.groups.forEach(gr=>{ const row=document.createElement("div"); row.className="grp";
+    row.innerHTML=`<b style="color:var(${TRT[gr.name]?TRT[gr.name].var:"--ink"})">${TRT[gr.name]?TRT[gr.name].short:gr.name} (${gr.plots.length})</b><div class="chips"></div>`;
+    gr.plots.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.className="chip"; b.style.setProperty("--c",SC[p.soil]||"#999");
+      b.setAttribute("aria-pressed",String(p.id===state.plot)); b.innerHTML=`<i></i>${p.id}`; b.title=p.soil;
+      b.addEventListener("click",()=>{ selectPlot(p.id); renderTrialQC(); }); row.querySelector(".chips").appendChild(b); });
+    g.appendChild(row); });
+  const steps=[`Range and spike test on each hourly reading: above field capacity + ${P.range_margin}% or more than ${P.spike_k}% from the ${P.spike_window_h}-hour median.`,
+    "Daily means from the remaining readings; days with no readings stay blank.",
+    `Convert to available water, 100 × (θ − WP)/(FC − WP), using the soil stored for each plot.`,
+    `SaQC drift-from-norm in ${P.dfn_window.replace("D","-day")} windows within each treatment group: a plot that leaves the majority cluster is flagged.`,
+    "Peer-trend rule within soil × treatment groups as a secondary check.",
+    "Flags are stored next to the values. Nothing is deleted."];
+  document.getElementById("tqFlow").innerHTML=steps.map((t,i)=>`<li><span>${i+1}</span><div>${t}</div></li>`).join("");
+  const V=Q.validation, tb=document.getElementById("tqVal");
+  if(!V){ tb.innerHTML='<tr><td>No ground truth in this data set. This is expected for field data.</td></tr>'; return; }
+  const rows=[];
+  if(V.spikes) rows.push(["Spikes",`${V.spikes.flagged} flagged / ${V.spikes.injected} injected`,V.spikes.flagged>=V.spikes.injected]);
+  if(V.drift) rows.push([`Drift (${V.drift.plot})`,`${V.drift.detected?"Detected":"Missed"}, ${V.drift.false_positive_plot_days} false plot-days elsewhere`,V.drift.detected&&V.drift.false_positive_plot_days===0]);
+  if(V.outage) rows.push([`Outage (${V.outage.plot})`,V.outage.detected?"Detected":"Missed",V.outage.detected]);
+  if(V.ndvi) rows.push(["NDVI errors",`${V.ndvi.detected} of ${V.ndvi.injected} detected, ${V.ndvi.flagged} flagged`,V.ndvi.detected===V.ndvi.injected]);
+  tb.innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="${r[2]?"ok":"bad"}">${r[1]}</td></tr>`).join("");
+}
+
+// ---------- forecasts ----------
+state.fcPoint="Z65";
+const errBarPlugin={id:"errbars",afterDatasetsDraw(ch){ const g=ch.ctx, ys=ch.scales.y, xs=ch.scales.x; g.save(); g.lineWidth=1.2;
+  ch.data.datasets.forEach((ds,di)=>{ if(!ds.isPoints||!ch.isDatasetVisible(di)) return; g.strokeStyle=ds.backgroundColor;
+    ds.data.forEach(pt=>{ const x=xs.getPixelForValue(pt.x); g.beginPath(); g.moveTo(x,ys.getPixelForValue(pt.lo)); g.lineTo(x,ys.getPixelForValue(pt.hi)); g.stroke(); }); });
+  g.restore(); }};
+function buildFcChart(){
+  if(typeof Chart==="undefined"||!D.models) return;
+  const muted=css("--muted"), line=css("--line"), pt=state.fcPoint;
+  const ds=TRT_ORDER.map(t=>({label:TRT[t].short,isPoints:true,backgroundColor:css(TRT[t].var),pointRadius:p=>0,
+    data:plots.filter(p=>p.trt===t).map(p=>{ const f=(p.yfc||[]).find(x=>x.point===pt); return f&&p.harvest.grain_yield!=null?{x:p.harvest.grain_yield,y:f.pred,lo:f.lo,hi:f.hi,id:p.id}:null; }).filter(Boolean)}));
+  ds.forEach(d=>{ d.pointRadius=d.data.map(o=>o.id===state.plot?7:4.5); d.pointBorderColor=d.data.map(o=>o.id===state.plot?css("--ink"):"transparent"); d.pointBorderWidth=2; });
+  ds.push({type:"line",label:"1:1",data:[{x:2,y:2},{x:9,y:9}],borderColor:muted,borderDash:[5,4],borderWidth:1,pointRadius:0});
+  const o={responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{position:"bottom",labels:{color:muted,boxWidth:10,font:{size:11},filter:i=>i.text!=="1:1"}},
+      tooltip:{filter:i=>i.dataset.isPoints,callbacks:{label:c=>`${c.raw.id}: forecast ${c.raw.y.toFixed(2)} (${c.raw.lo.toFixed(1)}–${c.raw.hi.toFixed(1)}), harvest ${c.raw.x.toFixed(2)} t/ha`}}},
+    scales:{x:{type:"linear",min:2,max:9,title:{display:true,text:"Harvested yield, t/ha",color:muted,font:{size:11}},ticks:{color:muted},grid:{color:line}},
+      y:{min:2,max:9,title:{display:true,text:`Forecast at ${POINT_NAME[pt]}, t/ha`,color:muted,font:{size:11}},ticks:{color:muted},grid:{color:line}}},
+    onClick:(e,els,ch)=>{ const el=els.find(x=>ch.data.datasets[x.datasetIndex].isPoints); if(el) selectPlot(ch.data.datasets[el.datasetIndex].data[el.index].id); }};
+  if(charts.fc) charts.fc.destroy();
+  charts.fc=new Chart(document.getElementById("fcChart"),{type:"scatter",data:{datasets:ds},options:o,plugins:[errBarPlugin]});
+}
+function renderModelCard(){
+  const sec=document.getElementById("fcSection");
+  if(!D.models){ sec.hidden=true; return; }
+  const M=D.models;
+  buildSeg(document.getElementById("fcSeg"), Object.fromEntries(Object.keys(M.points).map(k=>[k,POINT_NAME[k][0].toUpperCase()+POINT_NAME[k].slice(1)])), state.fcPoint, k=>{state.fcPoint=k; buildFcChart();});
+  document.getElementById("fcTrained").textContent=`Trained on ${M.trained}; tested on ${M.tested}.`;
+  const best="Early warning rule used by the platform";
+  document.getElementById("fcStress").innerHTML=Object.entries(M.stress).map(([k,v])=>`<tr${k===best?' style="font-weight:600"':""}><td>${k}</td><td>${v.mae==null?"–":(v.mae*100).toFixed(1)+" points"}</td><td>${v.new_stress_warning.f1.toFixed(2)}</td></tr>`).join("");
+  document.getElementById("fcYield").innerHTML=Object.keys(M.points).map(k=>{ const b=M.yld[k]["Treatment × cultivar mean"], g=M.yld[k]["Selected model"], better=g.rmse<b.rmse;
+    return `<tr><td>At ${POINT_NAME[k]}</td><td>RMSE ${b.rmse.toFixed(2)} t/ha</td><td style="font-weight:600;color:var(${better?"--ok":"--bad"})">RMSE ${g.rmse.toFixed(2)} t/ha, R² ${g.r2.toFixed(2)} <small style="font-weight:500;color:var(--muted)">${g.name.replace(" (ridge)","")}</small></td></tr>`; }).join("");
+  document.getElementById("fcCaveat").textContent=M.caveat+" Mean error is in percentage points of root-zone water. Early warning F1 counts days on which stress was not yet present. Model choices and the warning rule were fixed on the training seasons before testing; red marks a forecast no better than the treatment mean.";
+}
+
+// ---------- orchestration ----------
+function setIdx(i){
+  state.idx=i; slider.value=i;
+  renderMap(); renderState(); drawTimeline();
+  ["soil","can","wx"].forEach(k=>charts[k]&&charts[k].draw());
+}
+function selectPlot(id){
+  state.plot=id; if(D.models) buildFcChart(); if(typeof renderTrialQC==="function"&&document.getElementById("tqGroups").children.length) document.querySelectorAll("#tqGroups .chip").forEach(c=>c.setAttribute("aria-pressed",String(c.textContent===id))); renderMap(); renderPlotHead(); buildSoilChart(); buildCanChart(); buildYieldChart();
+}
+function buildAll(){ buildFcChart(); renderMap(); renderState(); drawTimeline(); renderPlotHead(); buildSoilChart(); buildCanChart(); buildWxChart(); buildYieldChart(); }
+if(typeof Chart!=="undefined"){ Chart.defaults.font.family=css("--font"); }
+renderQuality(); renderTrialQC(); renderModelCard(); buildAll();
+window.addEventListener("resize",()=>drawTimeline());
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(!document.documentElement.dataset.theme) buildAll(); });
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const cur=document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  const next=cur==="dark"?"light":"dark"; document.documentElement.dataset.theme=next;
+  try{ localStorage.setItem("wdt-theme",next);}catch(e){}
+  buildAll();
+});
+try{ const t=localStorage.getItem("wdt-theme"); if(t){ document.documentElement.dataset.theme=t; buildAll(); } }catch(e){}
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ if(typeof Chart!=="undefined") Chart.defaults.font.family=css("--font"); buildAll(); });
+})();
+</script>
+</body>
+</html>

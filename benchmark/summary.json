@@ -1,0 +1,401 @@
+{
+ "stats": {
+  "drift|Peer trend, no gating": {
+   "sec": [
+    0.555,
+    0.035
+   ],
+   "precision": [
+    NaN,
+    NaN
+   ],
+   "recall": [
+    NaN,
+    NaN
+   ],
+   "f1": [
+    NaN,
+    NaN
+   ],
+   "day_precision": [
+    0.405,
+    0.216
+   ],
+   "day_recall": [
+    0.902,
+    0.161
+   ],
+   "day_f1": [
+    0.536,
+    0.2
+   ],
+   "event_recall": [
+    0.95,
+    0.122
+   ],
+   "false_alarms": [
+    8.3,
+    6.383
+   ],
+   "delay": [
+    0.658,
+    1.231
+   ],
+   "param": 0.2
+  },
+  "drift|Proposed": {
+   "sec": [
+    0.714,
+    0.036
+   ],
+   "precision": [
+    NaN,
+    NaN
+   ],
+   "recall": [
+    NaN,
+    NaN
+   ],
+   "f1": [
+    NaN,
+    NaN
+   ],
+   "day_precision": [
+    0.735,
+    0.297
+   ],
+   "day_recall": [
+    0.615,
+    0.232
+   ],
+   "day_f1": [
+    0.65,
+    0.243
+   ],
+   "event_recall": [
+    0.883,
+    0.196
+   ],
+   "false_alarms": [
+    2.0,
+    2.656
+   ],
+   "delay": [
+    1.242,
+    1.733
+   ],
+   "param": 0.15
+  },
+  "drift|SaQC drift-from-norm": {
+   "sec": [
+    0.297,
+    0.014
+   ],
+   "precision": [
+    NaN,
+    NaN
+   ],
+   "recall": [
+    NaN,
+    NaN
+   ],
+   "f1": [
+    NaN,
+    NaN
+   ],
+   "day_precision": [
+    0.918,
+    0.081
+   ],
+   "day_recall": [
+    0.828,
+    0.134
+   ],
+   "day_f1": [
+    0.862,
+    0.097
+   ],
+   "event_recall": [
+    0.983,
+    0.075
+   ],
+   "false_alarms": [
+    1.2,
+    0.894
+   ],
+   "delay": [
+    2.192,
+    1.189
+   ],
+   "param": 0.5
+  },
+  "drift|SaQC drift-from-norm, all plots": {
+   "sec": [
+    0.914,
+    0.037
+   ],
+   "precision": [
+    NaN,
+    NaN
+   ],
+   "recall": [
+    NaN,
+    NaN
+   ],
+   "f1": [
+    NaN,
+    NaN
+   ],
+   "day_precision": [
+    0.002,
+    0.011
+   ],
+   "day_recall": [
+    0.005,
+    0.023
+   ],
+   "day_f1": [
+    0.003,
+    0.015
+   ],
+   "event_recall": [
+    0.017,
+    0.075
+   ],
+   "false_alarms": [
+    9.0,
+    7.152
+   ],
+   "delay": [
+    0.0,
+    NaN
+   ],
+   "param": 3.0
+  },
+  "drift|Single-series trend": {
+   "sec": [
+    0.495,
+    0.026
+   ],
+   "precision": [
+    NaN,
+    NaN
+   ],
+   "recall": [
+    NaN,
+    NaN
+   ],
+   "f1": [
+    NaN,
+    NaN
+   ],
+   "day_precision": [
+    0.012,
+    0.011
+   ],
+   "day_recall": [
+    0.269,
+    0.191
+   ],
+   "day_f1": [
+    0.023,
+    0.02
+   ],
+   "event_recall": [
+    0.65,
+    0.315
+   ],
+   "false_alarms": [
+    82.4,
+    26.573
+   ],
+   "delay": [
+    7.833,
+    5.993
+   ],
+   "param": 0.8
+  },
+  "spike|Hampel filter": {
+   "sec": [
+    0.104,
+    0.005
+   ],
+   "precision": [
+    0.929,
+    0.022
+   ],
+   "recall": [
+    0.914,
+    0.018
+   ],
+   "f1": [
+    0.921,
+    0.011
+   ],
+   "day_precision": [
+    NaN,
+    NaN
+   ],
+   "day_recall": [
+    NaN,
+    NaN
+   ],
+   "day_f1": [
+    NaN,
+    NaN
+   ],
+   "event_recall": [
+    NaN,
+    NaN
+   ],
+   "false_alarms": [
+    NaN,
+    NaN
+   ],
+   "delay": [
+    NaN,
+    NaN
+   ],
+   "param": 15.0
+  },
+  "spike|Proposed": {
+   "sec": [
+    0.071,
+    0.015
+   ],
+   "precision": [
+    0.963,
+    0.008
+   ],
+   "recall": [
+    0.994,
+    0.005
+   ],
+   "f1": [
+    0.978,
+    0.004
+   ],
+   "day_precision": [
+    NaN,
+    NaN
+   ],
+   "day_recall": [
+    NaN,
+    NaN
+   ],
+   "day_f1": [
+    NaN,
+    NaN
+   ],
+   "event_recall": [
+    NaN,
+    NaN
+   ],
+   "false_alarms": [
+    NaN,
+    NaN
+   ],
+   "delay": [
+    NaN,
+    NaN
+   ],
+   "param": 4.0
+  },
+  "spike|Range check": {
+   "sec": [
+    0.022,
+    0.002
+   ],
+   "precision": [
+    0.981,
+    0.032
+   ],
+   "recall": [
+    0.487,
+    0.039
+   ],
+   "f1": [
+    0.65,
+    0.036
+   ],
+   "day_precision": [
+    NaN,
+    NaN
+   ],
+   "day_recall": [
+    NaN,
+    NaN
+   ],
+   "day_f1": [
+    NaN,
+    NaN
+   ],
+   "event_recall": [
+    NaN,
+    NaN
+   ],
+   "false_alarms": [
+    NaN,
+    NaN
+   ],
+   "delay": [
+    NaN,
+    NaN
+   ],
+   "param": 8.0
+  },
+  "spike|SaQC (range + offset)": {
+   "sec": [
+    0.919,
+    0.044
+   ],
+   "precision": [
+    0.999,
+    0.005
+   ],
+   "recall": [
+    0.955,
+    0.011
+   ],
+   "f1": [
+    0.976,
+    0.006
+   ],
+   "day_precision": [
+    NaN,
+    NaN
+   ],
+   "day_recall": [
+    NaN,
+    NaN
+   ],
+   "day_f1": [
+    NaN,
+    NaN
+   ],
+   "event_recall": [
+    NaN,
+    NaN
+   ],
+   "false_alarms": [
+    NaN,
+    NaN
+   ],
+   "delay": [
+    NaN,
+    NaN
+   ],
+   "param": 4.0
+  }
+ },
+ "p": {
+  "sp_prop_saqc": 0.40909767150878906,
+  "sp_prop_hampel": 1.9073486328125e-06,
+  "dr_saqc_prop": 0.001209259033203125,
+  "dr_prop_nogate": 0.082550048828125,
+  "dr_fa_prop_nogate": 0.00018369666612853044,
+  "dr_prop_self": 1.9073486328125e-06,
+  "dr_saqc_all": 1.9073486328125e-06,
+  "dr_er_saqc_prop": 0.057779571123597204
+ }
+}
